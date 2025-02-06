@@ -189,7 +189,19 @@ public class Network {
 				int x = Integer.parseInt(ScObj.nextLine());
 				System.out.println("y: ");
 				int y = Integer.parseInt(ScObj.nextLine());
-				addNode(Nlist, x, y, N);
+				//"SAFE" nodes: Nodes may not duplicate by occupying the same point
+				boolean safe = true; //Initially assume safe
+			    for(int a=0; a<N; a++) { //Check every node
+			    	if(Nlist.get(a).x==x && Nlist.get(a).y==y) { //If point already occupied
+			    		safe = false; //Node would be a duplicate
+			    	}
+			    }
+			    if(safe) {
+			    	addNode(Nlist, x, y, N);
+			    }
+			    else {
+			    	System.out.println("Cannot duplicate node");
+			    }
 			}
 			if (cmd.equals("edge") | (cmd.equals("add") && subcmd.equals("edge"))) {
 				System.out.println("Lower node: ");
@@ -234,8 +246,49 @@ public class Network {
 					int x = Integer.parseInt(ScObj.nextLine());
 					System.out.println("y: ");
 					int y = Integer.parseInt(ScObj.nextLine());
-					addNode(Nlist, x, y, N);				
+					//"SAFE" nodes: Nodes may not duplicate by occupying the same point
+					boolean safe = true; //Initially assume safe
+				    for(int b=0; b<N; b++) { //Check every node
+				    	if(Nlist.get(b).x==x && Nlist.get(b).y==y) { //If point already occupied
+				    		safe = false; //Node would be a duplicate
+				    	}
+				    }
+				    if(safe) {
+				    	addNode(Nlist, x, y, N);
+				    }
+				    else {
+				    	System.out.println("Cannot duplicate node");
+				    	a--;
+				    }			
 				}				
+			}
+			if (cmd.equals("bedge")) {
+				System.out.println("Adding edges on bulk");
+				System.out.println("How Many?: ");
+				int m = Integer.parseInt(ScObj.nextLine());
+				for(int a=0; a<m; a++) {				
+					System.out.println("Lower node: ");
+					int i = Integer.parseInt(ScObj.nextLine());
+					System.out.println("Upper node: ");
+					int j = Integer.parseInt(ScObj.nextLine());
+					//"SAFE" edges: Edges may not duplicate by connecting the same two nodes
+					boolean safe = true; //Initially assume safe
+					Node ln = Nlist.get(i); //Lower node
+					int ne = ln.iel.length; //Number of edges connected to lower node
+					for(int b=0; b<ne; b++) { //For each edge in the internal edge list
+						if(Elist.get(ln.iel[b]).echeck(i)==j) //If it connects i and j
+						{
+							safe = false; //Edge would be a duplicate
+						}
+					}
+					if(safe) {
+						addEdge(Elist, Nlist, i, j, E);
+					}
+					else {
+						System.out.println("Cannot duplicate edge");
+						a--;
+					}		
+				}
 			}
 			if (cmd.equals("bparticle")) {
 				System.out.println("Adding particles on bulk");
@@ -312,35 +365,65 @@ public class Network {
 			if (cmd.equals("print") && subcmd.equals("node")) {
 				System.out.println("Node: ");
 				int idx = Integer.parseInt(ScObj.nextLine());
-				System.out.println(Nlist.get(idx).string());
+				if(!exists("node",idx,Nlist,Elist,plist)) {
+					System.out.println("Node does not exist");
+				}
+				else {
+					System.out.println(Nlist.get(idx).string());
+				}
 			}
 			if (cmd.equals("print") && subcmd.equals("edge")) {
 				System.out.println("Edge: ");
 				int idx = Integer.parseInt(ScObj.nextLine());
-				System.out.println(Elist.get(idx).string());
+				if(!exists("edge",idx,Nlist,Elist,plist)) {
+					System.out.println("Edge does not exist");
+				}
+				else {
+					System.out.println(Elist.get(idx).string());
+				}
 			}
 			if (cmd.equals("print") && subcmd.equals("particle")) {
 				System.out.println("Particle: ");
 				int idx = Integer.parseInt(ScObj.nextLine());
-				System.out.println(plist.get(idx).string());
+				if(!exists("particle",idx,Nlist,Elist,plist)) {
+					System.out.println("Particle does not exist");
+				}
+				else {
+					System.out.println(plist.get(idx).string());
+				}
 			}
 			if (cmd.equals("select") && subcmd.equals("node")) {
 				System.out.println("Node: ");
 				int idx = Integer.parseInt(ScObj.nextLine());
-				so = Nlist.get(idx);
-				sl = Nlist;
+				if(!exists("node",idx,Nlist,Elist,plist)) {
+					System.out.println("Node does not exist");
+				}
+				else {
+					so = Nlist.get(idx);
+					sl = Nlist;
+				}
 			}
 			if (cmd.equals("select") && subcmd.equals("edge")) {
 				System.out.println("Edge: ");
 				int idx = Integer.parseInt(ScObj.nextLine());
-				so = Elist.get(idx);
-				sl = Elist;
+				if(!exists("edge",idx,Nlist,Elist,plist)) {
+					System.out.println("Edge does not exist");
+				}
+				else {
+					so = Elist.get(idx);
+					sl = Elist;
+				}
 			}
 			if (cmd.equals("select") && subcmd.equals("particle")) {
 				System.out.println("Particle: ");
 				int idx = Integer.parseInt(ScObj.nextLine());
-				so = plist.get(idx);
-				sl = plist;
+				if(!exists("particle",idx,Nlist,Elist,plist)) {
+					System.out.println("Particle does not exist");
+				}
+				else {
+					so = plist.get(idx);
+					sl = plist;
+				}
 			}
 			if (cmd.equals("next")) {
 				so=so.next(sl);
@@ -462,10 +545,14 @@ public class Network {
 			if (cmd.equals("cw") && subcmd.equals("node")) {
 				System.out.println("Node: ");
 				int idx = Integer.parseInt(ScObj.nextLine());
-				System.out.println("Weight: ");
-				int w = Integer.parseInt(ScObj.nextLine());
-				Nlist.get(idx).weight=w;
-			
+				if(!exists("node",idx,Nlist,Elist,plist)) {
+					System.out.println("Node does not exist");
+				}
+				else {
+					System.out.println("Weight: ");
+					int w = Integer.parseInt(ScObj.nextLine());
+					Nlist.get(idx).weight=w;
+				}
 			}
 			if (cmd.equals("cw") && subcmd.equals("edge")) {
 				System.out.println("Edge: ");
@@ -485,17 +572,32 @@ public class Network {
 			if (cmd.equals("deleten") | (cmd.equals("delete") && subcmd.equals("node"))) {
 				System.out.println("Node: ");
 				int idx = Integer.parseInt(ScObj.nextLine());
-				deleteNode(Nlist, idx);
+				if(!exists("node",idx,Nlist,Elist,plist)) {
+					System.out.println("Node does not exist");
+				}
+				else {
+					deleteNode(Nlist, idx);
+				}
 			}
 			if (cmd.equals("deletee") | (cmd.equals("delete") && subcmd.equals("edge"))) {
 				System.out.println("Edge: ");
 				int idx = Integer.parseInt(ScObj.nextLine());
-				deleteEdge(Nlist, Elist, idx);
+				if(!exists("edge",idx,Nlist,Elist,plist)) {
+					System.out.println("Edge does not exist");
+				}
+				else {
+					deleteEdge(Nlist, Elist, idx);
+				}
 			}
 			if (cmd.equals("deletep") | (cmd.equals("delete") && subcmd.equals("particle"))) {
 				System.out.println("Particle: ");
 				int idx = Integer.parseInt(ScObj.nextLine());
-				deleteParticle(Nlist, plist, idx);
+				if(!exists("particle",idx,Nlist,Elist,plist)) {
+					System.out.println("Particle does not exist");
+				}
+				else {
+					deleteParticle(Nlist, plist, idx);
+				}
 			}
 
 		}
@@ -506,10 +608,6 @@ public class Network {
 		ArrayList<Node> Nlist = new ArrayList<>();
 		ArrayList<Edge> Elist = new ArrayList<>();
 		ArrayList<Particle> plist = new ArrayList<>();
-		
-		int N=0;
-		int E=0;
-		int p=0;
 		
 		init(Nlist, Elist, plist);
 		System.out.println("End!");
